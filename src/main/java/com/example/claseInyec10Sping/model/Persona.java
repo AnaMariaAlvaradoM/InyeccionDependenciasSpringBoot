@@ -1,6 +1,12 @@
 package com.example.claseInyec10Sping.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "personas")
 public class Persona {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_Persona;
     private String nombre;
     private String cargo;
