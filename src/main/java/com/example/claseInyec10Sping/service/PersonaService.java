@@ -1,21 +1,28 @@
 package com.example.claseInyec10Sping.service;
 
+import com.example.claseInyec10Sping.model.Direccion;
+import com.example.claseInyec10Sping.model.Mascota;
 import com.example.claseInyec10Sping.model.Persona;
+import com.example.claseInyec10Sping.model.Proyecto;
 import com.example.claseInyec10Sping.repository.IpersonaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.claseInyec10Sping.repository.ProyectoRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
-public class PersonaService implements IpersonaService{
+public class PersonaService implements IpersonaService {
 
     private final IpersonaRepository personaRepository;
+    private final ProyectoRepository proyectoRepository;
 
-    @Autowired
-    public PersonaService(IpersonaRepository personaRepository) {
+    public PersonaService(IpersonaRepository personaRepository,
+                          ProyectoRepository proyectoRepository) {
         this.personaRepository = personaRepository;
+        this.proyectoRepository = proyectoRepository;
     }
 
     @Override
@@ -23,35 +30,71 @@ public class PersonaService implements IpersonaService{
         return personaRepository.findAll();
     }
 
+
+//    public Optional<Persona> obtenerPorId(Long id) {
+//        return personaRepository.findById(id);
+//    }
+    @Transactional(readOnly = true)
     @Override
     public Optional<Persona> obtenerPorId(Long id) {
-        return personaRepository.findById(id);
+        Persona persona = personaRepository.findById(id)
+                .orElseThrow();
+
+        persona.getProyectos().size();
+
+        return Optional.of(persona);
     }
 
     @Override
-    public void guardarPersona(Persona persona) {
-        personaRepository.save(persona);
+    public Persona guardarPersona(Persona persona) {
+        return personaRepository.save(persona);
     }
 
     @Override
-    public void deletePersona(Long id) {
-        personaRepository.deleteById(id);
+    public Persona agregarMascota(Long personaId, Mascota mascota) {
+        Persona persona = personaRepository.findById(personaId)
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
+
+        mascota.setDueno(persona);
+        persona.getMascotas().add(mascota);
+
+        return personaRepository.save(persona);
     }
 
     @Override
-    public void editarPersona(Long id, Persona personaActualizada) {
-        //Saber si exsite
-        Persona personaExistente = personaRepository.findById(id).orElse(null);
+    public Persona asignarDireccion(Long personaId, Direccion direccion) {
+        Persona persona = personaRepository.findById(personaId)
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
 
-        if (personaExistente != null){
-            //Actualizar los campos de persona existente
-            personaExistente.setNombre(personaActualizada.getNombre());
-            personaExistente.setCargo(personaActualizada.getCargo());
+        direccion.setPersona(persona);
+        persona.setDireccion(direccion);
 
-            // Guardo a la persona actualziada
-            personaRepository.save(personaExistente);
-        } else {
-            throw new RuntimeException("Persona no encontrada con el id: " + id);
-        }
+        return personaRepository.save(persona);
     }
+
+    @Override
+    public Persona asignarProyecto(Long personaId, Long proyectoId) {
+        Persona persona = personaRepository.findById(personaId)
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
+
+        Proyecto proyecto = proyectoRepository.findById(proyectoId)
+                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+
+        persona.getProyectos().add(proyecto);
+
+        return personaRepository.save(persona);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Set<Proyecto> obtenerProyectosDePersona(Long personaId) {
+        Persona persona = personaRepository.findById(personaId)
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
+
+        //! FORZAMOS la inicialización dentro de la transacción
+        persona.getProyectos().size();
+
+        return persona.getProyectos();
+    }
+
 }

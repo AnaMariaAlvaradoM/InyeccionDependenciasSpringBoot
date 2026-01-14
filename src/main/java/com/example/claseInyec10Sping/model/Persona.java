@@ -1,6 +1,11 @@
 package com.example.claseInyec10Sping.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "personas")
@@ -11,6 +16,24 @@ public class Persona {
     private String nombre;
     private String cargo;
 
+    // ONE TO MANY
+    @OneToMany(mappedBy = "dueno", cascade = CascadeType.ALL, orphanRemoval = true)
+    //@JsonManagedReference
+    private List<Mascota> mascotas;
+
+    // ONE TO ONE
+    @OneToOne(mappedBy = "persona", cascade = CascadeType.ALL)
+    //@JsonManagedReference
+    private Direccion direccion;
+
+    // MANY TO MANY
+    @ManyToMany
+    @JoinTable(
+            name = "persona_proyecto",
+            joinColumns = @JoinColumn(name = "persona_id"),
+            inverseJoinColumns = @JoinColumn(name = "proyecto_id")
+    )
+    private Set<Proyecto> proyectos;
     public Persona() {
     }
 
@@ -42,5 +65,29 @@ public class Persona {
 
     public void setCargo(String cargo) {
         this.cargo = cargo;
+    }
+
+    public List<Mascota> getMascotas() {
+        return mascotas;
+    }
+
+    public void setMascotas(List<Mascota> mascotas) {
+        this.mascotas = mascotas;
+    }
+
+    public Direccion getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(Direccion direccion) {
+        this.direccion = direccion;
+    }
+
+    public Set<Proyecto> getProyectos() {
+        return proyectos;
+    }
+
+    public void setProyectos(Set<Proyecto> proyectos) {
+        this.proyectos = proyectos;
     }
 }
